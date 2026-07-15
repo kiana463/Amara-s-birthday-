@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>For Amara</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,500&family=Italiana&family=Tenor+Sans&display=swap" rel="stylesheet">
+<style>
+  /* ============================================================
+     DESIGN TOKENS
+     Background: near-black ink #06060c / #0c0d1a
+     Silver:      #cfd3e0 / #9ea4bd
+     Gold:        #e9c46a / #b8862f
+     Warm white:  #f6f2ea
+     Display face: 'Italiana' (the birthday headline)
+     Body face:    'Cormorant Garamond' (message text)
+     Utility face: 'Tenor Sans' (labels, countdown digits, captions)
+  ============================================================ */
+  :root{
+    --ink: #06060c;
+    --ink-2: #0c0d1e;
+    --silver: #cfd3e0;
+    --silver-dim: #7c8099;
+    --gold: #e9c46a;
+    --gold-dim: #9c7a2e;
+    --warm: #f6f2ea;
+  }
+
+  *{box-sizing:border-box; margin:0; padding:0;}
+
+  html,body{
+    height:100%;
+    background:var(--ink);
+    color:var(--warm);
+    font-family:'Cormorant Garamond', serif;
+    overflow-x:hidden;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important;}
+  }
+
+  canvas#sky{
+    position:fixed; inset:0; width:100%; height:100%; z-index:0; pointer-events:none;
+  }
+
+  /* ---------- COUNTDOWN PHASE ---------- */
+  #phase-countdown{
+    position:relative; z-index:2;
+    min-height:100vh;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center; padding:2rem;
+  }
+  .eyebrow{
+    font-family:'Tenor Sans', sans-serif;
+    letter-spacing:0.35em;
+    text-transform:uppercase;
+    font-size:0.7rem;
+    color:var(--silver-dim);
+    margin-bottom:1.4rem;
+  }
+  .countdown-title{
+    font-family:'Italiana', serif;
+    font-size:clamp(2rem, 6vw, 3.6rem);
+    color:var(--warm);
+    letter-spacing:0.04em;
+    margin-bottom:2.4rem;
+  }
+  .countdown-title em{
+    font-style:normal;
+    color:var(--gold);
+  }
+  .countdown-grid{
+    display:flex; gap:clamp(1rem, 4vw, 3rem);
+  }
+  .countdown-unit{
+    display:flex; flex-direction:column; align-items:center;
+  }
+  .countdown-num{
+    font-family:'Tenor Sans', sans-serif;
+    font-size:clamp(2.2rem, 7vw, 4rem);
+    color:var(--silver);
+    line-height:1;
+    text-shadow: 0 0 18px rgba(207,211,224,0.35);
+    min-width:2ch;
+  }
+  .countdown-label{
+    font-family:'Tenor Sans', sans-serif;
+    font-size:0.65rem;
+    letter-spacing:0.25em;
+    text-transform:uppercase;
+    color:var(--silver-dim);
+    margin-top:0.6rem;
+  }
+  .countdown-sub{
+    margin-top:2.6rem;
+    font-size:1.05rem;
+    color:var(--silver-dim);
+    font-style:italic;
+  }
+
+  /* ---------- CELEBRATION PHASE ---------- */
+  #phase-celebration{
+    display:none;
+    position:relative; z-index:2;
+  }
+  #phase-celebration.active{ display:block; }
+
+  .message-section{
+    min-height:100vh;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center; padding:3rem 1.5rem;
+    opacity:0;
+    animation:riseIn 1.8s ease forwards;
+    animation-delay:0.3s;
+  }
+  @keyframes riseIn{
+    from{opacity:0; transform:translateY(24px);}
+    to{opacity:1; transform:translateY(0);}
+  }
+  .headline{
+    font-family:'Italiana', serif;
+    font-size:clamp(2.2rem, 7vw, 4.2rem);
+    color:var(--gold);
+    letter-spacing:0.03em;
+    margin-bottom:2rem;
+    text-shadow:0 0 30px rgba(233,196,106,0.3);
+  }
+  .birthday-message{
+    max-width:640px;
+    font-size:clamp(1.15rem, 2.6vw, 1.55rem);
+    line-height:1.75;
+    color:var(--warm);
+  }
+  .birthday-message p{ margin-bottom:1rem; }
+  .scroll-cue{
+    margin-top:3.5rem;
+    font-family:'Tenor Sans', sans-serif;
+    font-size:0.7rem;
+    letter-spacing:0.3em;
+    text-transform:uppercase;
+    color:var(--silver-dim);
+    animation:pulse 2.4s ease-in-out infinite;
+  }
+  @keyframes pulse{ 0%,100%{opacity:0.4;} 50%{opacity:1;} }
+
+  /* ---------- MEMORY GALLERY ---------- */
+  .memory-section{
+    min-height:100vh;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding:3rem 1.5rem;
+    position:relative;
+  }
+  .memory-heading{
+    font-family:'Italiana', serif;
+    font-size:clamp(1.6rem, 4vw, 2.4rem);
+    color:var(--silver);
+    margin-bottom:0.6rem;
+    text-align:center;
+  }
+  .memory-instruction{
+    font-family:'Tenor Sans', sans-serif;
+    font-size:0.7rem;
+    letter-spacing:0.2em;
+    text-transform:uppercase;
+    color:var(--silver-dim);
+    margin-bottom:2.6rem;
+    text-align:center;
+  }
+  .card-stack{
+    position:relative;
+    width:min(90vw, 480px);
+    height:min(60vh, 520px);
+  }
+  .memory-card{
+    position:absolute; inset:0;
+    background:linear-gradient(160deg, #14152a, #0a0a16);
+    border:1px solid rgba(207,211,224,0.15);
+    border-radius:14px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding:1.5rem;
+    text-align:center;
+    cursor:pointer;
+    transition:transform 0.6s cubic-bezier(.22,.68,0,1.01), opacity 0.6s ease;
+    box-shadow:0 20px 60px rgba(0,0,0,0.5);
+  }
+  .memory-media{
+    width:100%; height:70%;
+    border-radius:8px;
+    background:rgba(207,211,224,0.06);
+    display:flex; align-items:center; justify-content:center;
+    color:var(--silver-dim);
+    font-family:'Tenor Sans', sans-serif;
+    font-size:0.85rem;
+    letter-spacing:0.05em;
+    overflow:hidden;
+    margin-bottom:1.1rem;
+  }
+  .memory-media img, .memory-media video{
+    width:100%; height:100%; object-fit:cover;
+  }
+  .memory-caption{
+    font-size:1.15rem;
+    color:var(--warm);
+    font-style:italic;
+  }
+  .memory-tap{
+    margin-top:0.8rem;
+    font-family:'Tenor Sans', sans-serif;
+    font-size:0.6rem;
+    letter-spacing:0.2em;
+    text-transform:uppercase;
+    color:var(--gold-dim);
+  }
+  .memory-card.exit-left{ transform:translateX(-140%) rotate(-12deg); opacity:0; }
+  .memory-card.exit-right{ transform:translateX(140%) rotate(12deg); opacity:0; }
+
+  .dots{
+    display:flex; gap:0.5rem; margin-top:2rem;
+  }
+  .dot{
+    width:7px; height:7px; border-radius:50%;
+    background:var(--silver-dim); opacity:0.4;
+  }
+  .dot.seen{ background:var(--gold); opacity:1; }
+
+  /* ---------- FINAL OVERLAY ---------- */
+  #final-overlay{
+    position:fixed; inset:0; z-index:10;
+    background:var(--ink);
+    display:flex; align-items:center; justify-content:center;
+    text-align:center; padding:2rem;
+    opacity:0; pointer-events:none;
+    transition:opacity 1.6s ease;
+  }
+  #final-overlay.show{ opacity:1; pointer-events:all; }
+  .final-text{
+    max-width:560px;
+    font-size:clamp(1.3rem, 3.4vw, 1.9rem);
+    line-height:1.7;
+    color:var(--warm);
+  }
+  .final-sign{
+    display:block;
+    margin-top:1.8rem;
+    font-family:'Italiana', serif;
+    font-size:1.4rem;
+    color:var(--gold);
+  }
+
+  .fade-out{ animation:fadeOutSection 1s ease forwards; }
+  @keyframes fadeOutSection{ to{ opacity:0; } }
+
+  /* ---------- OPEN GATE (unlock moment + music permission) ---------- */
+  #open-gate{
+    position:fixed; inset:0; z-index:9;
+    background:var(--ink);
+    display:none;
+    align-items:center; justify-content:center;
+    flex-direction:column;
+    text-align:center;
+    opacity:0;
+    transition:opacity 1s ease;
+  }
+  #open-gate.show{ display:flex; opacity:1; }
+  .gate-title{
+    font-family:'Italiana', serif;
+    font-size:clamp(1.6rem, 5vw, 2.4rem);
+    color:var(--gold);
+    margin-bottom:2rem;
+    letter-spacing:0.03em;
+  }
+  .gate-button{
+    font-family:'Tenor Sans', sans-serif;
+    letter-spacing:0.3em;
+    text-transform:uppercase;
+    font-size:0.75rem;
+    color:var(--ink);
+    background:var(--gold);
+    border:none;
+    padding:1rem 2.4rem;
+    border-radius:999px;
+    cursor:pointer;
+    transition:transform 0.3s ease, box-shadow 0.3s ease;
+    box-shadow:0 0 30px rgba(233,196,106,0.35);
+  }
+  .gate-button:hover{ transform:scale(1.05); }
+
+  .sound-toggle{
+    position:fixed; bottom:1.4rem; right:1.4rem; z-index:11;
+    width:42px; height:42px; border-radius:50%;
+    background:rgba(255,255,255,0.06);
+    border:1px solid rgba(207,211,224,0.25);
+    color:var(--silver);
+    font-family:'Tenor Sans', sans-serif;
+    font-size:1rem;
+    display:none;
+    align-items:center; justify-content:center;
+    cursor:pointer;
+    backdrop-filter:blur(6px);
+  }
+  .sound-toggle.show{ display:flex; }
+
+  .replay-link{
+    display:inline-block;
+    margin-top:2rem;
+    font-family:'Tenor Sans', sans-serif;
+    font-size:0.65rem;
+    letter-spacing:0.2em;
+    text-transform:uppercase;
+    color:var(--silver-dim);
+    cursor:pointer;
+    border-bottom:1px solid rgba(124,128,153,0.4);
+    padding-bottom:2px;
+  }
+</style>
+</head>
+<body>
+
+<canvas id="sky"></canvas>
+
+<!-- ============ COUNTDOWN PHASE ============ -->
+<section id="phase-countdown">
+  <div class="eyebrow">a small thing, arriving soon</div>
+  <h1 class="countdown-title">Something for <em>Amara</em> is on its way</h1>
+  <div class="countdown-grid">
+    <div class="countdown-unit"><div class="countdown-num" id="cd-days">00</div><div class="countdown-label">Days</div></div>
+    <div class="countdown-unit"><div class="countdown-num" id="cd-hours">00</div><div class="countdown-label">Hours</div></div>
+    <div class="countdown-unit"><div class="countdown-num" id="cd-mins">00</div><div class="countdown-label">Minutes</div></div>
+    <div class="countdown-unit"><div class="countdown-num" id="cd-secs">00</div><div class="countdown-label">Seconds</div></div>
+  </div>
+  <div class="countdown-sub">Come back on July 21st. Midnight breaks it open.</div>
+</section>
+
+<!-- ============ OPEN GATE ============ -->
+<div id="open-gate">
+  <div class="gate-title">It's time.</div>
+  <button class="gate-button" id="gate-button">Open It</button>
+</div>
+
+<button class="sound-toggle" id="sound-toggle" title="Mute/unmute music">♪</button>
+
+<!-- ============ CELEBRATION PHASE ============ -->
+<section id="phase-celebration">
+
+  <div class="message-section">
+    <h1 class="headline">Happy Birthday, My Love</h1>
+    <div class="birthday-message">
+      <p>Wishing you long life and prosperity.</p>
+      <p>Thank you for always correcting me when I'm wrong. Thank you for always being there for me. Thank you for always being a big sister to me.</p>
+      <p>You're my twin. You're my duo. You're my platonic soulmate.</p>
+      <p>I pray that as you enter adulthood, this grants you even more life and prosperity.</p>
+    </div>
+    <div class="scroll-cue">scroll down for us ↓</div>
+  </div>
+
+  <div class="memory-section">
+    <h2 class="memory-heading">Our Memories</h2>
+    <div class="memory-instruction">tap a card to move to the next</div>
+    <div class="card-stack" id="card-stack"></div>
+    <div class="dots" id="dots"></div>
+  </div>
+
+</section>
+
+<!-- ============ FINAL OVERLAY ============ -->
+<div id="final-overlay">
+  <div class="final-text">
+    No matter where life takes us, I know we're always going to be together.
+    <span class="final-sign">— Chimummy</span>
+    <span class="replay-link" id="replay-link">watch our memories again</span>
+  </div>
+</div>
+
+<!-- ============ BACKGROUND MUSIC ============ -->
+<!-- Put your music file in the same folder as this index.html and update src below -->
+<audio id="bgm" loop src="music.mp3"></audio>
+
+<script>
+/* ============================================================
+   HOW TO ADD AMARA'S REAL PHOTOS AND VIDEOS
+   ------------------------------------------------------------
+   1. Put your photo/video files in the SAME folder as this
+      index.html file (for example: memory1.jpg, memory2.mp4).
+   2. Scroll down to the `memories` array below.
+   3. For a photo, set: media: '<img src="memory1.jpg">'
+      For a video, set: media: '<video src="memory1.mp4" controls playsinline></video>'
+   4. Update the `caption` text for each one.
+   You can add as many memories as you like — just add more
+   objects to the array in the same {media, caption} shape.
+
+   HOW TO ADD MUSIC
+   ------------------------------------------------------------
+   1. Put your song file (mp3 works best) in the same folder as
+      this index.html — for example: music.mp3
+   2. Find the <audio id="bgm" ...> tag near the bottom of the
+      HTML (just above this script) and change src="music.mp3"
+      to match your file's real name.
+   3. That's it — music starts automatically the moment she taps
+      "Open It" when the countdown finishes.
+============================================================ */
+
+const memories = [
+  { media: '', caption: 'Replace me with your first photo or video together' },
+  { media: '', caption: 'Replace me with your second memory' },
+  { media: '', caption: 'Replace me with your third memory' },
+  { media: '', caption: 'Replace me with your fourth memory' },
+  { media: '', caption: 'The last one — save something special for this spot' },
+];
+
+/* ---------------- COUNTDOWN LOGIC ---------------- */
+// Target: July 21, 2026, 00:00:00 — viewer's local time
+const targetDate = new Date(2026, 6, 21, 0, 0, 0).getTime();
+
+const countdownPhase = document.getElementById('phase-countdown');
+const celebrationPhase = document.getElementById('phase-celebration');
+
+function renderCountdown(){
+  const now = Date.now();
+  const diff = targetDate - now;
+
+  if (diff <= 0){
+    localStorage.setItem('amara_unlocked', 'true');
+    startCelebration();
+    return;
+  }
+
+  const d = Math.floor(diff / (1000*60*60*24));
+  const h = Math.floor((diff / (1000*60*60)) % 24);
+  const m = Math.floor((diff / (1000*60)) % 60);
+  const s = Math.floor((diff / 1000) % 60);
+
+  document.getElementById('cd-days').textContent  = String(d).padStart(2,'0');
+  document.getElementById('cd-hours').textContent = String(h).padStart(2,'0');
+  document.getElementById('cd-mins').textContent  = String(m).padStart(2,'0');
+  document.getElementById('cd-secs').textContent  = String(s).padStart(2,'0');
+}
+
+// Once this device has unlocked the celebration even one time, it is
+// remembered permanently — the countdown screen will never show again
+// on this device, no matter when she reopens the link.
+if (localStorage.getItem('amara_unlocked') === 'true'){
+  countdownPhase.style.display = 'none';
+}
+
+let countdownInterval = setInterval(renderCountdown, 1000);
+renderCountdown();
+
+const openGate = document.getElementById('open-gate');
+const gateButton = document.getElementById('gate-button');
+const soundToggle = document.getElementById('sound-toggle');
+const bgm = document.getElementById('bgm');
+
+function startCelebration(){
+  // Instead of revealing everything immediately, show a tap-to-open
+  // moment. This is also what lets the music start, since browsers
+  // block audio from playing until the visitor has interacted.
+  clearInterval(countdownInterval);
+  countdownPhase.style.display = 'none';
+  openGate.classList.add('show');
+}
+
+gateButton.addEventListener('click', () => {
+  openGate.classList.remove('show');
+  celebrationPhase.classList.add('active');
+  sky.mode = 'celebration';
+  soundToggle.classList.add('show');
+
+  bgm.volume = 0.55;
+  bgm.play().catch(() => { /* file not added yet, or blocked — ignore quietly */ });
+
+  buildMemoryStack();
+});
+
+soundToggle.addEventListener('click', () => {
+  if (bgm.paused){
+    bgm.play().catch(()=>{});
+    soundToggle.textContent = '♪';
+  } else {
+    bgm.pause();
+    soundToggle.textContent = '✕';
+  }
+});
+
+/* ---------------- MEMORY CARD STACK ---------------- */
+/* Progress is saved in this browser (localStorage) so if Amara closes
+   the tab and comes back, she picks up right where she left off
+   instead of starting the memories over from the beginning. */
+const cardStack = document.getElementById('card-stack');
+const dotsWrap = document.getElementById('dots');
+const memorySection = document.querySelector('.memory-section');
+const finalOverlay = document.getElementById('final-overlay');
+const replayLink = document.getElementById('replay-link');
+
+let currentIndex = parseInt(localStorage.getItem('amara_memoryIndex') || '0', 10);
+const alreadySeenFinal = localStorage.getItem('amara_seenFinal') === 'true';
+
+function buildMemoryStack(){
+  if (alreadySeenFinal && currentIndex >= memories.length){
+    // She's already been through everything before — go straight
+    // to the final message, with the option to watch it all again.
+    memorySection.style.display = 'none';
+    finalOverlay.classList.add('show');
+    return;
+  }
+  cardStack.innerHTML = '';
+  dotsWrap.innerHTML = '';
+  memories.forEach((m, i) => {
+    const dot = document.createElement('div');
+    dot.className = 'dot';
+    dot.id = 'dot-' + i;
+    if (i < currentIndex) dot.classList.add('seen');
+    dotsWrap.appendChild(dot);
+  });
+  renderCards();
+}
+
+replayLink.addEventListener('click', () => {
+  currentIndex = 0;
+  localStorage.setItem('amara_memoryIndex', '0');
+  localStorage.setItem('amara_seenFinal', 'false');
+  finalOverlay.classList.remove('show');
+  memorySection.style.display = 'flex';
+  memorySection.classList.remove('fade-out');
+  buildMemoryStack();
+});
+
+function renderCards(){
+  cardStack.innerHTML = '';
+  const visible = memories.slice(currentIndex, currentIndex + 2).reverse();
+  visible.forEach((m, idx) => {
+    const realIndex = currentIndex + (visible.length - 1 - idx);
+    const card = document.createElement('div');
+    card.className = 'memory-card';
+    card.style.zIndex = 10 + idx;
+    card.style.transform = idx === visible.length - 1 ? 'scale(1)' : 'scale(0.94) translateY(14px)';
+    card.innerHTML = `
+      <div class="memory-media">${m.media || 'Add a photo or video here'}</div>
+      <div class="memory-caption">${m.caption}</div>
+      <div class="memory-tap">tap to continue</div>
+    `;
+    if (realIndex === currentIndex){
+      card.addEventListener('click', () => advanceCard(card));
+    }
+    cardStack.appendChild(card);
+  });
+}
+
+function advanceCard(card){
+  const dir = Math.random() > 0.5 ? 'exit-left' : 'exit-right';
+  card.classList.add(dir);
+  const dot = document.getElementById('dot-' + currentIndex);
+  if (dot) dot.classList.add('seen');
+
+  setTimeout(() => {
+    currentIndex++;
+    localStorage.setItem('amara_memoryIndex', String(currentIndex));
+    if (currentIndex >= memories.length){
+      localStorage.setItem('amara_seenFinal', 'true');
+      revealFinal();
+    } else {
+      renderCards();
+    }
+  }, 550);
+}
+
+function revealFinal(){
+  memorySection.classList.add('fade-out');
+  setTimeout(() => {
+    memorySection.style.display = 'none';
+    finalOverlay.classList.add('show');
+  }, 900);
+}
+
+/* ---------------- BACKGROUND CANVAS: STARS + GOLD FALL ---------------- */
+const canvas = document.getElementById('sky');
+const ctx = canvas.getContext('2d');
+let W, H;
+function resize(){ W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
+window.addEventListener('resize', resize);
+resize();
+
+const sky = { mode: 'countdown' };
+
+// twinkling starfield (countdown phase)
+const twinkles = Array.from({length: 140}, () => ({
+  x: Math.random()*W, y: Math.random()*H,
+  r: Math.random()*1.4 + 0.3,
+  phase: Math.random()*Math.PI*2,
+  speed: Math.random()*0.02 + 0.01
+}));
+
+// falling particles (celebration phase): silver stars + gold shards
+const fallers = Array.from({length: 90}, () => makeFaller());
+function makeFaller(){
+  const gold = Math.random() > 0.5;
+  return {
+    x: Math.random()*W,
+    y: Math.random()*H - H,
+    size: gold ? Math.random()*3 + 1.5 : Math.random()*2.4 + 1,
+    speed: Math.random()*1.2 + 0.5,
+    drift: (Math.random()-0.5)*0.6,
+    gold,
+    twinkle: Math.random()*Math.PI*2
+  };
+}
+
+function drawStarShape(cx, cy, r, color){
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.beginPath();
+  for (let i=0; i<5; i++){
+    ctx.lineTo(Math.cos((18+i*72)*Math.PI/180)*r, -Math.sin((18+i*72)*Math.PI/180)*r);
+    ctx.lineTo(Math.cos((54+i*72)*Math.PI/180)*r*0.42, -Math.sin((54+i*72)*Math.PI/180)*r*0.42);
+  }
+  ctx.closePath();
+  ctx.fillStyle = color;
+  ctx.fill();
+  ctx.restore();
+}
+
+function loop(){
+  ctx.clearRect(0,0,W,H);
+
+  if (sky.mode === 'countdown'){
+    twinkles.forEach(t => {
+      t.phase += t.speed;
+      const a = 0.35 + Math.sin(t.phase)*0.35;
+      ctx.beginPath();
+      ctx.arc(t.x, t.y, t.r, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(207,211,224,${Math.max(a,0.05)})`;
+      ctx.fill();
+    });
+  } else {
+    // faint static twinkle base
+    twinkles.forEach(t => {
+      t.phase += t.speed*0.5;
+      const a = 0.12 + Math.sin(t.phase)*0.1;
+      ctx.beginPath();
+      ctx.arc(t.x, t.y, t.r*0.8, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(207,211,224,${Math.max(a,0.03)})`;
+      ctx.fill();
+    });
+
+    fallers.forEach(f => {
+      f.y += f.speed;
+      f.x += f.drift;
+      f.twinkle += 0.05;
+      if (f.y > H + 20){ Object.assign(f, makeFaller(), {y: -20}); }
+      const shimmer = 0.6 + Math.sin(f.twinkle)*0.4;
+      if (f.gold){
+        drawStarShape(f.x, f.y, f.size, `rgba(233,196,106,${shimmer})`);
+      } else {
+        ctx.beginPath();
+        ctx.arc(f.x, f.y, f.size*0.6, 0, Math.PI*2);
+        ctx.fillStyle = `rgba(207,211,224,${shimmer})`;
+        ctx.fill();
+      }
+    });
+  }
+
+  requestAnimationFrame(loop);
+}
+loop();
+</script>
+</body>
+</html>
